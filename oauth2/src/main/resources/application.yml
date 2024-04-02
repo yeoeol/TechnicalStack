@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: oauth2
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao" # yml ???? {} ? spring ????? ???? ?? ?? " " ??
+            authorization-grant-type: authorization_code
+            client-id: 12560c5f0bc4d7c99650d6856f34c73e # ?? -> REST API ?
+            client-secret: r6yblqdKVUrHIGYTZVnS5inUK4d98Ja8 # ??? ??? -> ?? -> Client Secret ??
+            client-authentication-method: client_secret_post
+            client-name: kakao
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize # "?? ?? ??" ??
+            token-uri: https://kauth.kakao.com/oauth/token # "?? ??" ??
+            user-info-uri: https://kapi.kakao.com/v2/user/me # "??? ?? ????" ??
+            user-name-attribute: id # ??? . ???? ?? "id" ??
