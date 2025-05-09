@@ -1,4 +1,4 @@
-package com.example.fcmpush.v2.dto;
+package com.example.fcmpush.v1.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

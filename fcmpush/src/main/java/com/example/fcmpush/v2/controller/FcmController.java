@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.fcmpush.v1.service.FcmService;
 import com.example.fcmpush.v2.dto.FcmTokenRequest;
 import com.example.fcmpush.v2.service.FcmPushService;
 import com.example.fcmpush.v2.service.FcmTokenService;
@@ -45,7 +46,6 @@ public class FcmController {
 
 		ApiResponseWrapper<Object> arw = ApiResponseWrapper
 			.builder()
-			.result(1)
 			.result(1)
 			.resultCode(SuccessCode.SELECT_SUCCESS.getStatus())
 			.resultMsg(SuccessCode.SELECT_SUCCESS.getMessage())
