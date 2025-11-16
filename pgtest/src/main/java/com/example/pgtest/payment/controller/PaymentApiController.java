@@ -19,7 +19,7 @@ public class PaymentApiController {
     }
 
     @PostMapping("/api/payments/confirm")
-    public PaymentConfirmResponseDto confirm(@RequestBody String jsonBody) throws IOException {
+    public PaymentConfirmResponseDto confirm(@RequestBody String jsonBody) {
         return paymentService.confirmPayment(jsonBody);
     }
 }
