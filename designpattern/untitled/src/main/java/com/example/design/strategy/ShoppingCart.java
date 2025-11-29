@@ -31,4 +31,5 @@ public class ShoppingCart {
         int amount = calculateTotal();
         paymentMethod.pay(amount);
     }
+
 }

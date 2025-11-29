@@ -16,4 +16,5 @@ public class Main {
         // pay by KAKAOCard
         cart.pay(new KAKAOCardStrategy("test", "123456789", "123", "12/20"));
     }
+
 }

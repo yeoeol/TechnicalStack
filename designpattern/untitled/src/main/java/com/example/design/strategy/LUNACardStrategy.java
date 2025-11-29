@@ -14,4 +14,5 @@ public class LUNACardStrategy implements PaymentStrategy {
     public void pay(int amount) {
         System.out.println(amount + " paid using LUNACard.");
     }
+
 }
