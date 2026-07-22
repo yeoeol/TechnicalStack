@@ -3,10 +3,13 @@ package com.example.hierarchicaldatalab.comment;
 import com.example.hierarchicaldatalab.global.BaseEntity;
 import jakarta.persistence.*;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseEntity {
 
 	@Id
@@ -22,4 +25,14 @@ public class Comment extends BaseEntity {
 
 	@Column(name = "content", nullable = false)
 	private String content;
+
+	public Comment(Long parentId, Long userId, String content) {
+		this.parentId = parentId;
+		this.userId = userId;
+		this.content = content;
+	}
+
+	public static Comment create(Long parentId, Long userId, String content) {
+		return new Comment(parentId, userId, content);
+	}
 }
