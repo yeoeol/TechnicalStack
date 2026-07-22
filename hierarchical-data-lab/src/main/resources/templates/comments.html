@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>재귀 댓글 실습</title>
+  <link rel="stylesheet" href="/static/css/comments.css" th:href="@{/css/comments.css}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">RECURSIVE CTE PLAYGROUND</p>
+        <h1>댓글 트리</h1>
+        <p class="page-description">루트 댓글부터 대댓글, 대대댓글까지 단계별로 펼쳐보세요.</p>
+      </div>
+      <div class="tree-legend" aria-label="댓글 깊이 안내">
+        <span><i class="legend-dot root-dot"></i>루트</span>
+        <span><i class="legend-dot child-dot"></i>하위 댓글</span>
+      </div>
+    </header>
+
+    <section class="comment-panel" aria-labelledby="comment-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="section-label">DISCUSSION</p>
+          <h2 id="comment-heading">댓글 <span id="comment-count" class="comment-count">0</span></h2>
+        </div>
+        <div class="view-actions" aria-label="댓글 조회 방식">
+          <button type="button" class="view-button is-active" data-view="roots">루트만 보기</button>
+          <button type="button" class="view-button" data-view="tree">전체 트리 펼치기</button>
+        </div>
+      </div>
+
+      <form id="root-comment-form" class="comment-composer">
+        <label for="root-comment" class="sr-only">새 댓글 내용</label>
+        <textarea id="root-comment" name="content" rows="3" maxlength="500"
+                  placeholder="새로운 루트 댓글을 입력하세요." required></textarea>
+        <div class="composer-footer">
+          <span>새 댓글은 현재 화면에만 임시로 추가됩니다.</span>
+          <button type="submit" class="primary-button">댓글 등록</button>
+        </div>
+      </form>
+
+      <div id="load-status" class="load-status" role="status" aria-live="polite"></div>
+      <div id="comment-list" class="comment-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <template id="reply-form-template">
+    <form class="reply-form">
+      <label class="sr-only">답글 내용</label>
+      <textarea name="content" rows="2" maxlength="500" placeholder="답글을 입력하세요." required></textarea>
+      <div class="reply-form-actions">
+        <button type="button" class="text-button" data-action="cancel-reply">취소</button>
+        <button type="submit" class="secondary-button">답글 등록</button>
+      </div>
+    </form>
+  </template>
+
+  <script th:inline="javascript">
+    window.__ROOT_COMMENTS__ = /*[[${rootComments}]]*/ null;
+  </script>
+  <script src="/static/js/comments.js" th:src="@{/js/comments.js}"></script>
+</body>
+</html>

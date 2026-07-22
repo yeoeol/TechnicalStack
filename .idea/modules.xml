@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/TechnicalStack.iml" filepath="$PROJECT_DIR$/.idea/TechnicalStack.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/hierarchical-data-lab.main.iml" filepath="$PROJECT_DIR$/.idea/modules/hierarchical-data-lab.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/read-file.main.iml" filepath="$PROJECT_DIR$/.idea/modules/read-file.main.iml" />
     </modules>
   </component>
 </project>
