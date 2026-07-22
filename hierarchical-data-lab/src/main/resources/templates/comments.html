@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>재귀 댓글 실습</title>
-  <link rel="stylesheet" href="/static/css/comments.css" th:href="@{/css/comments.css}">
+  <title>계층형 댓글 실습</title>
+  <link rel="stylesheet" href="../static/css/comments.css" th:href="@{/css/comments.css}">
 </head>
 <body>
   <main class="page-shell">
     <header class="page-header">
       <div>
-        <p class="eyebrow">RECURSIVE CTE PLAYGROUND</p>
+        <p class="eyebrow">HIERARCHICAL DATA PLAYGROUND</p>
         <h1>댓글 트리</h1>
-        <p class="page-description">루트 댓글부터 대댓글, 대대댓글까지 단계별로 펼쳐보세요.</p>
+        <p class="page-description">Spring MVC가 전달한 계층형 데이터를 Thymeleaf로 렌더링합니다.</p>
       </div>
       <div class="tree-legend" aria-label="댓글 깊이 안내">
         <span><i class="legend-dot root-dot"></i>루트</span>
@@ -24,43 +24,151 @@
       <div class="panel-heading">
         <div>
           <p class="section-label">DISCUSSION</p>
-          <h2 id="comment-heading">댓글 <span id="comment-count" class="comment-count">0</span></h2>
+          <h2 id="comment-heading">
+            댓글
+            <span class="comment-count"
+                  th:text="${commentCount != null ? commentCount : #lists.size(comments)}">8</span>
+          </h2>
         </div>
-        <div class="view-actions" aria-label="댓글 조회 방식">
-          <button type="button" class="view-button is-active" data-view="roots">루트만 보기</button>
-          <button type="button" class="view-button" data-view="tree">전체 트리 펼치기</button>
-        </div>
+        <nav class="view-actions" aria-label="댓글 조회 방식">
+          <a class="view-button"
+             th:classappend="${viewMode == 'roots'} ? 'is-active'"
+             href="comments.html" th:href="@{/comments(view='roots')}">루트만 보기</a>
+          <a class="view-button"
+             th:classappend="${viewMode == 'tree'} ? 'is-active'"
+             href="comments.html" th:href="@{/comments(view='tree')}">전체 트리 보기</a>
+        </nav>
       </div>
 
-      <form id="root-comment-form" class="comment-composer">
+      <div class="query-context" th:if="${viewMode == 'children'}">
+        <span th:text="|#${parentComment.id} 댓글의 직계 답글|">#101 댓글의 직계 답글</span>
+        <a href="comments.html" th:href="@{/comments(view='roots')}">루트 목록으로 돌아가기</a>
+      </div>
+
+      <form class="comment-composer" method="post" action="/comments" th:action="@{/comments}">
+        <input type="hidden" name="parentId" value="">
         <label for="root-comment" class="sr-only">새 댓글 내용</label>
         <textarea id="root-comment" name="content" rows="3" maxlength="500"
                   placeholder="새로운 루트 댓글을 입력하세요." required></textarea>
         <div class="composer-footer">
-          <span>새 댓글은 현재 화면에만 임시로 추가됩니다.</span>
+          <span>등록 후 댓글 목록으로 이동합니다.</span>
           <button type="submit" class="primary-button">댓글 등록</button>
         </div>
       </form>
 
-      <div id="load-status" class="load-status" role="status" aria-live="polite"></div>
-      <div id="comment-list" class="comment-list" aria-live="polite"></div>
+      <div class="comment-list">
+        <th:block th:each="comment : ${comments}">
+          <th:block th:replace="~{fragments/comment :: commentNode(comment=${comment})}"></th:block>
+        </th:block>
+
+        <div class="empty-state thymeleaf-only"
+             th:class="'empty-state'"
+             th:if="${#lists.isEmpty(comments)}">
+          아직 댓글이 없습니다.<br>첫 번째 댓글을 남겨보세요.
+        </div>
+
+        <!-- Thymeleaf를 거치지 않고 파일을 열었을 때만 보이는 화면 미리보기입니다. -->
+        <div class="static-preview" th:remove="all">
+          <article class="comment-node" data-depth="0">
+            <div class="comment-card">
+              <div class="avatar" aria-hidden="true">민</div>
+              <div class="comment-main">
+                <div class="comment-meta">
+                  <span class="comment-author">민준</span>
+                  <span class="comment-time">12분 전</span>
+                  <span class="depth-badge">depth 0</span>
+                </div>
+                <p class="comment-content">재귀 CTE의 기준 행에는 루트 댓글만 선택하면 될까요?</p>
+                <div class="comment-actions">
+                  <details class="reply-composer">
+                    <summary class="text-button">답글 달기</summary>
+                    <form class="reply-form">
+                      <textarea rows="2" placeholder="답글을 입력하세요."></textarea>
+                      <div class="reply-form-actions"><button class="secondary-button">답글 등록</button></div>
+                    </form>
+                  </details>
+                  <span class="child-count">직계 답글 1개</span>
+                </div>
+              </div>
+            </div>
+            <div class="child-comments">
+              <article class="comment-node" data-depth="1">
+                <div class="comment-card">
+                  <div class="avatar" aria-hidden="true">서</div>
+                  <div class="comment-main">
+                    <div class="comment-meta">
+                      <span class="comment-author">서연</span>
+                      <span class="comment-time">9분 전</span>
+                      <span class="depth-badge">depth 1</span>
+                    </div>
+                    <p class="comment-content">네. parent_id가 NULL인 행에서 시작해 자식 행을 재귀적으로 조인하면 됩니다.</p>
+                    <div class="comment-actions">
+                      <details class="reply-composer">
+                        <summary class="text-button">답글 달기</summary>
+                        <form class="reply-form">
+                          <textarea rows="2" placeholder="답글을 입력하세요."></textarea>
+                          <div class="reply-form-actions"><button class="secondary-button">답글 등록</button></div>
+                        </form>
+                      </details>
+                      <span class="child-count">직계 답글 1개</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="child-comments">
+                  <article class="comment-node" data-depth="2">
+                    <div class="comment-card">
+                      <div class="avatar" aria-hidden="true">민</div>
+                      <div class="comment-main">
+                        <div class="comment-meta">
+                          <span class="comment-author">민준</span>
+                          <span class="comment-time">7분 전</span>
+                          <span class="depth-badge">depth 2</span>
+                        </div>
+                        <p class="comment-content">그럼 depth도 CTE 안에서 1씩 증가시키면 되겠네요.</p>
+                        <div class="comment-actions">
+                          <details class="reply-composer">
+                            <summary class="text-button">답글 달기</summary>
+                            <form class="reply-form">
+                              <textarea rows="2" placeholder="답글을 입력하세요."></textarea>
+                              <div class="reply-form-actions"><button class="secondary-button">답글 등록</button></div>
+                            </form>
+                          </details>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </article>
+            </div>
+          </article>
+
+          <article class="comment-node" data-depth="0">
+            <div class="comment-card">
+              <div class="avatar" aria-hidden="true">하</div>
+              <div class="comment-main">
+                <div class="comment-meta">
+                  <span class="comment-author">하은</span>
+                  <span class="comment-time">18분 전</span>
+                  <span class="depth-badge">depth 0</span>
+                </div>
+                <p class="comment-content">직계 자식 조회와 전체 트리 조회의 차이를 비교해보려고 합니다.</p>
+                <div class="comment-actions">
+                  <details class="reply-composer">
+                    <summary class="text-button">답글 달기</summary>
+                    <form class="reply-form">
+                      <textarea rows="2" placeholder="답글을 입력하세요."></textarea>
+                      <div class="reply-form-actions"><button class="secondary-button">답글 등록</button></div>
+                    </form>
+                  </details>
+                  <a class="text-button child-link" href="#">직계 답글 1개 보기</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
     </section>
   </main>
 
-  <template id="reply-form-template">
-    <form class="reply-form">
-      <label class="sr-only">답글 내용</label>
-      <textarea name="content" rows="2" maxlength="500" placeholder="답글을 입력하세요." required></textarea>
-      <div class="reply-form-actions">
-        <button type="button" class="text-button" data-action="cancel-reply">취소</button>
-        <button type="submit" class="secondary-button">답글 등록</button>
-      </div>
-    </form>
-  </template>
-
-  <script th:inline="javascript">
-    window.__ROOT_COMMENTS__ = /*[[${rootComments}]]*/ null;
-  </script>
-  <script src="/static/js/comments.js" th:src="@{/js/comments.js}"></script>
 </body>
 </html>

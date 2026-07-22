@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+  <article class="comment-node"
+           th:fragment="commentNode(comment)"
+           th:attr="data-comment-id=${comment.id},data-depth=${comment.depth}">
+    <div class="comment-card">
+      <div class="avatar" aria-hidden="true"
+           th:text="${#strings.substring(comment.author, 0, 1)}">민</div>
+      <div class="comment-main">
+        <div class="comment-meta">
+          <span class="comment-author" th:text="${comment.author}">민준</span>
+          <span class="comment-time" th:text="${comment.createdAt}">12분 전</span>
+          <span class="depth-badge" th:text="|depth ${comment.depth}|">depth 0</span>
+        </div>
+        <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
+        <div class="comment-actions">
+          <details class="reply-composer">
+            <summary class="text-button">답글 달기</summary>
+            <form class="reply-form" method="post" action="/comments" th:action="@{/comments}">
+              <input type="hidden" name="parentId" th:value="${comment.id}">
+              <label class="sr-only" th:for="|reply-content-${comment.id}|">답글 내용</label>
+              <textarea name="content" rows="2" maxlength="500"
+                        th:id="|reply-content-${comment.id}|"
+                        placeholder="답글을 입력하세요." required></textarea>
+              <div class="reply-form-actions">
+                <button type="submit" class="secondary-button">답글 등록</button>
+              </div>
+            </form>
+          </details>
+
+          <a class="text-button child-link"
+             th:if="${comment.childCount > 0 and #lists.isEmpty(comment.children)}"
+             href="comments.html"
+             th:href="@{/comments(view='children',parentId=${comment.id})}">
+            직계 답글 <span th:text="${comment.childCount}">0</span>개 보기
+          </a>
+
+          <span class="child-count" th:if="${not #lists.isEmpty(comment.children)}">
+            직계 답글 <span th:text="${#lists.size(comment.children)}">0</span>개
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="child-comments" th:if="${not #lists.isEmpty(comment.children)}">
+      <th:block th:each="child : ${comment.children}">
+        <th:block th:replace="~{fragments/comment :: commentNode(comment=${child})}"></th:block>
+      </th:block>
+    </div>
+  </article>
+</body>
+</html>
