@@ -2,51 +2,89 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
   <article class="comment-node"
-           th:fragment="commentNode(comment)"
-           th:attr="data-comment-id=${comment.id},data-depth=${comment.depth}">
+           th:fragment="treeNode(comment, depth)"
+           th:attr="data-comment-id=${comment.commentId},data-depth=${depth},hidden=${depth > 0 ? 'hidden' : null}"
+           th:style="|--depth: ${depth}|">
     <div class="comment-card">
-      <div class="avatar" aria-hidden="true"
-           th:text="${#strings.substring(comment.author, 0, 1)}">민</div>
+      <div class="avatar" aria-hidden="true" th:text="${comment.userId}">1</div>
       <div class="comment-main">
         <div class="comment-meta">
-          <span class="comment-author" th:text="${comment.author}">민준</span>
-          <span class="comment-time" th:text="${comment.createdAt}">12분 전</span>
-          <span class="depth-badge" th:text="|depth ${comment.depth}|">depth 0</span>
+          <strong th:text="|@사용자${comment.userId}|">@사용자1</strong>
+          <span th:text="|댓글 #${comment.commentId}|">댓글 #10</span>
         </div>
         <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
         <div class="comment-actions">
           <details class="reply-composer">
-            <summary class="text-button">답글 달기</summary>
+            <summary>답글</summary>
             <form class="reply-form" method="post" action="/comments" th:action="@{/comments}">
-              <input type="hidden" name="parentId" th:value="${comment.id}">
-              <label class="sr-only" th:for="|reply-content-${comment.id}|">답글 내용</label>
-              <textarea name="content" rows="2" maxlength="500"
-                        th:id="|reply-content-${comment.id}|"
-                        placeholder="답글을 입력하세요." required></textarea>
-              <div class="reply-form-actions">
-                <button type="submit" class="secondary-button">답글 등록</button>
+              <input type="hidden" name="parentId" th:value="${comment.commentId}">
+              <div class="field">
+                <label th:for="|reply-user-${comment.commentId}|">사용자 ID</label>
+                <input name="userId" type="number" min="1" placeholder="예: 1"
+                       th:id="|reply-user-${comment.commentId}|" required>
               </div>
+              <div class="field">
+                <label th:for="|reply-content-${comment.commentId}|">답글 내용</label>
+                <textarea name="content" rows="3" maxlength="500" placeholder="답글을 입력하세요."
+                          th:id="|reply-content-${comment.commentId}|" required></textarea>
+              </div>
+              <button type="submit" class="secondary-button">답글 등록</button>
             </form>
           </details>
-
-          <a class="text-button child-link"
-             th:if="${comment.childCount > 0 and #lists.isEmpty(comment.children)}"
-             href="comments.html"
-             th:href="@{/comments(view='children',parentId=${comment.id})}">
-            직계 답글 <span th:text="${comment.childCount}">0</span>개 보기
-          </a>
-
-          <span class="child-count" th:if="${not #lists.isEmpty(comment.children)}">
-            직계 답글 <span th:text="${#lists.size(comment.children)}">0</span>개
-          </span>
+          <button class="reply-toggle" type="button"
+                  th:if="${not #lists.isEmpty(comment.children) and depth % 2 == 0}"
+                  th:attr="aria-controls=|comment-children-${comment.commentId}|, data-reply-count=${comment.descendantCount}"
+                  aria-expanded="false">
+            <span class="reply-toggle-icon" aria-hidden="true">⌄</span>
+            <span class="reply-toggle-text" th:text="|답글 ${comment.descendantCount}개|">답글 0개</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="child-comments" th:if="${not #lists.isEmpty(comment.children)}">
+    <div class="comment-children"
+         th:if="${not #lists.isEmpty(comment.children)}"
+         th:id="|comment-children-${comment.commentId}|">
       <th:block th:each="child : ${comment.children}">
-        <th:block th:replace="~{fragments/comment :: commentNode(comment=${child})}"></th:block>
+        <th:block th:replace="~{fragments/comment :: treeNode(comment=${child}, depth=${depth + 1})}"></th:block>
       </th:block>
+    </div>
+  </article>
+
+  <article class="comment-node flat-node"
+           th:fragment="flatNode(comment)"
+           th:attr="data-comment-id=${comment.commentId}">
+    <div class="comment-card">
+      <div class="avatar" aria-hidden="true" th:text="${comment.userId}">1</div>
+      <div class="comment-main">
+        <div class="comment-meta">
+          <strong th:text="|@사용자${comment.userId}|">@사용자1</strong>
+          <span th:text="|댓글 #${comment.commentId}|">댓글 #10</span>
+          <span th:if="${comment.parentId != null}" th:text="|부모 #${comment.parentId}|">부모 #3</span>
+        </div>
+        <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
+        <div class="comment-actions">
+          <details class="reply-composer">
+            <summary>답글</summary>
+            <form class="reply-form" method="post" action="/comments" th:action="@{/comments}">
+              <input type="hidden" name="parentId" th:value="${comment.commentId}">
+              <div class="field">
+                <label th:for="|flat-reply-user-${comment.commentId}|">사용자 ID</label>
+                <input name="userId" type="number" min="1" placeholder="예: 1"
+                       th:id="|flat-reply-user-${comment.commentId}|" required>
+              </div>
+              <div class="field">
+                <label th:for="|flat-reply-content-${comment.commentId}|">답글 내용</label>
+                <textarea name="content" rows="3" maxlength="500" placeholder="답글을 입력하세요."
+                          th:id="|flat-reply-content-${comment.commentId}|" required></textarea>
+              </div>
+              <button type="submit" class="secondary-button">답글 등록</button>
+            </form>
+          </details>
+          <a class="child-link" href="comments.html"
+             th:href="@{/comments/{id}/children(id=${comment.commentId})}">하위 댓글 보기</a>
+        </div>
+      </div>
     </div>
   </article>
 </body>

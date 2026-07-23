@@ -3,7 +3,10 @@ package com.example.hierarchicaldatalab.comment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,10 +36,39 @@ public class CommentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<CommentResponseDto> getBottoms() {
-		List<Comment> bottoms = commentRepository.findBottomComments();
-		return bottoms.stream()
-				.map(CommentResponseDto::from)
-				.toList();
+	public List<CommentTreeResponseDto> getTree() {
+		return buildTree(commentRepository.findAllByOrderByCreatedAtAsc());
+	}
+
+	@Transactional(readOnly = true)
+	public List<CommentTreeResponseDto> getChildren(Long parentId) {
+		List<Comment> children = commentRepository.findChildrenByParent(parentId);
+		return buildTree(children);
+	}
+
+	private List<CommentTreeResponseDto> buildTree(List<Comment> comments) {
+		Map<Long, CommentTreeResponseDto> commentsById = new LinkedHashMap<>();
+		for (Comment comment : comments) {
+			commentsById.put(comment.getId(), CommentTreeResponseDto.init(comment));
+		}
+
+		List<CommentTreeResponseDto> roots = new ArrayList<>();
+		for (Comment comment : comments) {
+			CommentTreeResponseDto current = commentsById.get(comment.getId());
+			CommentTreeResponseDto parent = commentsById.get(comment.getParentId());
+
+			if (parent == null) {
+				roots.add(current);
+				continue;
+			}
+
+			parent.addChild(current);
+		}
+
+		for (CommentTreeResponseDto root : roots) {
+			root.calculateDescendantCount();
+		}
+
+		return roots;
 	}
 }

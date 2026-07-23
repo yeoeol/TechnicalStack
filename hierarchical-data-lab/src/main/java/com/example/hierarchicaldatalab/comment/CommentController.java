@@ -2,10 +2,7 @@ package com.example.hierarchicaldatalab.comment;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -13,29 +10,38 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/comment")
+@RequestMapping("/comments")
 public class CommentController {
 
 	private final CommentService commentService;
 
 	@GetMapping
-	public String commentHome() {
+	public String commentHome(Model model) {
+		List<CommentTreeResponseDto> comments = commentService.getTree();
+		model.addAttribute("viewMode", "tree");
+		model.addAttribute("viewTitle", "전체 댓글");
+		model.addAttribute("treeComments", comments);
 		return "comments";
 	}
 
 	// 루트 댓글만 조회
-	@GetMapping("/root")
-	public String root(Model model) {
+	@GetMapping("/roots")
+	public String roots(Model model) {
 		List<CommentResponseDto> roots = commentService.getRoots();
-		model.addAttribute(roots);
+		model.addAttribute("viewMode", "roots");
+		model.addAttribute("viewTitle", "루트 댓글");
+		model.addAttribute("comments", roots);
 		return "comments";
 	}
 
-	// 최하위 댓글만 조회
-	@GetMapping("/bottom")
-	public String bottom(Model model) {
-		List<CommentResponseDto> bottoms = commentService.getBottoms();
-		model.addAttribute(bottoms);
+	// 특정 댓글의 모든 하위 댓글 조회
+	@GetMapping("/{parentId}/children")
+	public String directChildren(@PathVariable("parentId") Long parentId, Model model) {
+		List<CommentTreeResponseDto> children = commentService.getChildren(parentId);
+		model.addAttribute("viewMode", "children");
+		model.addAttribute("viewTitle", parentId + "번 댓글의 하위 댓글");
+		model.addAttribute("parentId", parentId);
+		model.addAttribute("treeComments", children);
 		return "comments";
 	}
 
@@ -43,6 +49,6 @@ public class CommentController {
 	@PostMapping
 	public String create(@ModelAttribute CommentRequestDto requestDto) {
 		commentService.create(requestDto);
-		return "redirect:/";
+		return "redirect:/comments";
 	}
 }
