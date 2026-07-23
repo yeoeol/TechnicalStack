@@ -37,7 +37,9 @@ public class CommentService {
 
 	@Transactional(readOnly = true)
 	public List<CommentTreeResponseDto> getTree() {
-		return buildTree(commentRepository.findAllByOrderByCreatedAtAsc());
+		List<CommentTreeResponseDto> roots = buildTree(commentRepository.findAllByOrderByCreatedAtAsc());
+		roots.forEach(CommentTreeResponseDto::calculateDescendantCount);
+		return roots;
 	}
 
 	@Transactional(readOnly = true)
@@ -63,10 +65,6 @@ public class CommentService {
 			}
 
 			parent.addChild(current);
-		}
-
-		for (CommentTreeResponseDto root : roots) {
-			root.calculateDescendantCount();
 		}
 
 		return roots;

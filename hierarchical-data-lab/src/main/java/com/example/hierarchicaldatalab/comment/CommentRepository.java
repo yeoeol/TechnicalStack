@@ -17,17 +17,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	List<Comment> findRootComments();
 
 	@Query(value = """
-		SELECT c
-		FROM Comment c
-		WHERE NOT EXISTS (
-			SELECT 1
-			FROM Comment child
-			WHERE child.parentId = c.id
-		)
-	""")
-	List<Comment> findBottomComments();
-
-	@Query(value = """
 		WITH RECURSIVE descendants AS (
 			SELECT c.comment_id, c.parent_id, c.user_id, c.content,
 			       c.created_at, c.updated_at, 1 AS depth
