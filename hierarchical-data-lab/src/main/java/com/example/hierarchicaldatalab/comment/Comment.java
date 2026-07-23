@@ -3,6 +3,8 @@ package com.example.hierarchicaldatalab.comment;
 import com.example.hierarchicaldatalab.global.BaseEntity;
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +28,9 @@ public class Comment extends BaseEntity {
 	@Column(name = "content", nullable = false)
 	private String content;
 
+	@Column(name = "deleted_at", nullable = true)
+	private Instant deletedAt;
+
 	public Comment(Long parentId, Long userId, String content) {
 		this.parentId = parentId;
 		this.userId = userId;
@@ -34,5 +39,13 @@ public class Comment extends BaseEntity {
 
 	public static Comment create(Long parentId, Long userId, String content) {
 		return new Comment(parentId, userId, content);
+	}
+
+	public boolean isDeleted() {
+		return deletedAt != null;
+	}
+
+	public void delete() {
+		deletedAt = Instant.now();
 	}
 }

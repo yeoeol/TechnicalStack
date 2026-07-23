@@ -51,4 +51,11 @@ public class CommentController {
 		commentService.create(requestDto);
 		return "redirect:/comments";
 	}
+
+	// 댓글 삭제
+	@DeleteMapping("/{commentId}")
+	public String delete(@PathVariable("commentId") Long commentId) {
+		commentService.delete(commentId);
+		return "redirect:/comments";
+	}
 }

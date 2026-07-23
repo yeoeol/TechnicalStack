@@ -14,7 +14,7 @@
         </div>
         <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
         <div class="comment-actions">
-          <details class="reply-composer">
+          <details class="reply-composer" th:unless="${comment.deleted}">
             <summary>답글</summary>
             <form class="reply-form" method="post" action="/comments" th:action="@{/comments}">
               <input type="hidden" name="parentId" th:value="${comment.commentId}">

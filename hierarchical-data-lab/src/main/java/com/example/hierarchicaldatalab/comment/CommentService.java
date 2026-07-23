@@ -48,6 +48,12 @@ public class CommentService {
 		return buildTree(children);
 	}
 
+	@Transactional
+	public void delete(Long commentId) {
+		Comment comment = commentRepository.findById(commentId).orElseThrow();
+		comment.delete();
+	}
+
 	private List<CommentTreeResponseDto> buildTree(List<Comment> comments) {
 		Map<Long, CommentTreeResponseDto> commentsById = new LinkedHashMap<>();
 		for (Comment comment : comments) {

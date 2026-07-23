@@ -12,6 +12,7 @@ public class CommentTreeResponseDto {
 	private Long parentId;
 	private Long userId;
 	private String content;
+	private boolean deleted;
 	private int descendantCount;
 	private final List<CommentTreeResponseDto> children;
 
@@ -20,6 +21,7 @@ public class CommentTreeResponseDto {
 			Long parentId,
 			Long userId,
 			String content,
+			boolean deleted,
 			int descendantCount,
 			List<CommentTreeResponseDto> children
 	) {
@@ -27,6 +29,7 @@ public class CommentTreeResponseDto {
 		this.parentId = parentId;
 		this.userId = userId;
 		this.content = content;
+		this.deleted = deleted;
 		this.descendantCount = descendantCount;
 		this.children = children;
 	}
@@ -36,7 +39,10 @@ public class CommentTreeResponseDto {
 				comment.getId(),
 				comment.getParentId(),
 				comment.getUserId(),
-				comment.getContent(),
+				comment.isDeleted()
+					? "삭제된 댓글입니다."
+					: comment.getContent(),
+				comment.isDeleted(),
 				0,
 				new ArrayList<>()
 		);
