@@ -27,7 +27,7 @@ public class CommentController {
 	// 루트 댓글만 조회
 	@GetMapping("/roots")
 	public String roots(Model model) {
-		List<CommentResponseDto> roots = commentService.getRoots();
+		List<CommentTreeResponseDto> roots = commentService.getTree();
 		model.addAttribute("viewMode", "roots");
 		model.addAttribute("viewTitle", "루트 댓글");
 		model.addAttribute("comments", roots);
@@ -53,7 +53,7 @@ public class CommentController {
 	}
 
 	// 댓글 삭제
-	@DeleteMapping("/{commentId}")
+	@PostMapping("/{commentId}/delete")
 	public String delete(@PathVariable("commentId") Long commentId) {
 		commentService.delete(commentId);
 		return "redirect:/comments";

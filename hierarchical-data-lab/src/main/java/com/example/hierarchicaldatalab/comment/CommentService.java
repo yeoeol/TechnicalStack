@@ -38,14 +38,16 @@ public class CommentService {
 	@Transactional(readOnly = true)
 	public List<CommentTreeResponseDto> getTree() {
 		List<CommentTreeResponseDto> roots = buildTree(commentRepository.findAllByOrderByCreatedAtAsc());
-		roots.forEach(CommentTreeResponseDto::calculateDescendantCount);
+		roots.removeIf(root -> !root.pruneDeletedBranches());
 		return roots;
 	}
 
 	@Transactional(readOnly = true)
 	public List<CommentTreeResponseDto> getChildren(Long parentId) {
 		List<Comment> children = commentRepository.findChildrenByParent(parentId);
-		return buildTree(children);
+		List<CommentTreeResponseDto> roots = buildTree(children);
+		roots.removeIf(root -> !root.pruneDeletedBranches());
+		return roots;
 	}
 
 	@Transactional

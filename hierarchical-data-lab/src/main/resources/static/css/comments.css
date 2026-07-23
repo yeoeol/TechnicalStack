@@ -339,6 +339,11 @@ textarea::placeholder {
   line-height: 1.7;
 }
 
+.comment-content.is-deleted {
+  color: #98a2b3;
+  font-style: italic;
+}
+
 .comment-actions {
   display: flex;
   align-items: center;
@@ -407,6 +412,22 @@ textarea::placeholder {
 
 .reply-toggle[aria-expanded="true"] .reply-toggle-icon {
   transform: rotate(180deg) translateY(2px);
+}
+
+.delete-button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: transparent;
+  color: #98a2b3;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.delete-button:hover {
+  background: #fef3f2;
+  color: #b42318;
 }
 
 .child-link {

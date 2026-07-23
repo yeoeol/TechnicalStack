@@ -19,19 +19,19 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 	@Query(value = """
 		WITH RECURSIVE descendants AS (
 			SELECT c.comment_id, c.parent_id, c.user_id, c.content,
-			       c.created_at, c.updated_at, 1 AS depth
+			       c.created_at, c.updated_at, c.deleted_at, 1 AS depth
 			FROM comment c
 			WHERE c.parent_id = :parentId
 
 			UNION ALL
 
 			SELECT c.comment_id, c.parent_id, c.user_id, c.content,
-			       c.created_at, c.updated_at, d.depth + 1
+			       c.created_at, c.updated_at, c.deleted_at, d.depth + 1
 			FROM comment c
 			JOIN descendants d ON c.parent_id = d.comment_id
 		)
 		SELECT d.comment_id, d.parent_id, d.user_id, d.content,
-		       d.created_at, d.updated_at
+		       d.created_at, d.updated_at, d.deleted_at
 		FROM descendants d
 		ORDER BY d.depth, d.comment_id
 	""", nativeQuery = true)

@@ -52,14 +52,12 @@ public class CommentTreeResponseDto {
 		children.add(child);
 	}
 
-	public int calculateDescendantCount() {
-		int count = 0;
+	public boolean pruneDeletedBranches() {
+		children.removeIf(child -> !child.pruneDeletedBranches());
+		descendantCount = children.stream()
+				.mapToInt(child -> 1 + child.descendantCount)
+				.sum();
 
-		for (CommentTreeResponseDto child : children) {
-			count += 1 + child.calculateDescendantCount();
-		}
-
-		descendantCount = count;
-		return count;
+		return !deleted || !children.isEmpty();
 	}
 }

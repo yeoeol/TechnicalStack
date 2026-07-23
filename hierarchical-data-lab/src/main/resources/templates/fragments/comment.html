@@ -12,7 +12,9 @@
           <strong th:text="|@사용자${comment.userId}|">@사용자1</strong>
           <span th:text="|댓글 #${comment.commentId}|">댓글 #10</span>
         </div>
-        <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
+        <p class="comment-content"
+           th:classappend="${comment.deleted} ? 'is-deleted' : ''"
+           th:text="${comment.content}">댓글 내용</p>
         <div class="comment-actions">
           <details class="reply-composer" th:unless="${comment.deleted}">
             <summary>답글</summary>
@@ -38,6 +40,15 @@
             <span class="reply-toggle-icon" aria-hidden="true">⌄</span>
             <span class="reply-toggle-text" th:text="|답글 ${comment.descendantCount}개|">답글 0개</span>
           </button>
+          <form method="post"
+                th:unless="${comment.deleted}"
+                th:action="@{/comments/{id}/delete(id=${comment.commentId})}"
+                onsubmit="return window.confirm('댓글을 삭제하시겠습니까?')">
+            <button class="delete-button" type="submit"
+                    th:attr="aria-label=|댓글 #${comment.commentId} 삭제|">
+              삭제
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -62,9 +73,11 @@
           <span th:text="|댓글 #${comment.commentId}|">댓글 #10</span>
           <span th:if="${comment.parentId != null}" th:text="|부모 #${comment.parentId}|">부모 #3</span>
         </div>
-        <p class="comment-content" th:text="${comment.content}">댓글 내용</p>
+        <p class="comment-content"
+           th:classappend="${comment.deleted} ? 'is-deleted' : ''"
+           th:text="${comment.content}">댓글 내용</p>
         <div class="comment-actions">
-          <details class="reply-composer">
+          <details class="reply-composer" th:unless="${comment.deleted}">
             <summary>답글</summary>
             <form class="reply-form" method="post" action="/comments" th:action="@{/comments}">
               <input type="hidden" name="parentId" th:value="${comment.commentId}">
@@ -83,6 +96,15 @@
           </details>
           <a class="child-link" href="comments.html"
              th:href="@{/comments/{id}/children(id=${comment.commentId})}">하위 댓글 보기</a>
+          <form method="post"
+                th:unless="${comment.deleted}"
+                th:action="@{/comments/{id}/delete(id=${comment.commentId})}"
+                onsubmit="return window.confirm('댓글을 삭제하시겠습니까?')">
+            <button class="delete-button" type="submit"
+                    th:attr="aria-label=|댓글 #${comment.commentId} 삭제|">
+              삭제
+            </button>
+          </form>
         </div>
       </div>
     </div>
