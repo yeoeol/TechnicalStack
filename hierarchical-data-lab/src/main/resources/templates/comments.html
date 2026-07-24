@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>댓글</title>
+  <link rel="stylesheet" href="../static/css/comments.css" th:href="@{/css/comments.css}">
+  <script src="../static/js/comments.js" th:src="@{/js/comments.js}" defer></script>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <a class="home-link" href="home.html" th:href="@{/}">← 홈</a>
+      <p class="eyebrow">COMMENT TREE</p>
+      <h1>댓글</h1>
+      <p class="page-description">답글을 펼치면 두 단계씩 이어서 볼 수 있습니다.</p>
+    </header>
+
+    <nav class="view-tabs" aria-label="댓글 조회 방식">
+      <a class="view-tab"
+         th:classappend="${viewMode == 'tree'} ? ' is-active'"
+         href="comments.html" th:href="@{/comments}">전체 트리</a>
+      <a class="view-tab"
+         th:classappend="${viewMode == 'roots'} ? ' is-active'"
+         href="comments.html" th:href="@{/comments/roots}">루트 댓글</a>
+    </nav>
+
+    <section class="composer-panel" aria-labelledby="composer-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">NEW COMMENT</p>
+          <h2 id="composer-title">새 댓글 작성</h2>
+        </div>
+        <p>답글은 각 댓글의 <strong>답글 작성</strong> 버튼에서 등록할 수 있습니다.</p>
+      </div>
+
+      <form class="root-form" method="post" action="/comments" th:action="@{/comments}">
+        <input type="hidden" name="parentId" value="">
+        <div class="field user-field">
+          <label for="root-user-id">사용자 ID</label>
+          <input id="root-user-id" name="userId" type="number" min="1" placeholder="예: 1" required>
+        </div>
+        <div class="field content-field">
+          <label for="root-content">댓글 내용</label>
+          <textarea id="root-content" name="content" rows="3" maxlength="500"
+                    placeholder="댓글을 입력하세요." required></textarea>
+        </div>
+        <button type="submit" class="primary-button">댓글 등록</button>
+      </form>
+    </section>
+
+    <section class="comments-panel" aria-labelledby="comments-title">
+      <div class="section-heading list-heading">
+        <div>
+          <p class="section-label">DISCUSSION</p>
+          <h2 id="comments-title" th:text="${viewTitle}">전체 댓글</h2>
+        </div>
+        <a class="back-link" th:if="${viewMode == 'children'}"
+           href="comments.html" th:href="@{/comments}">전체 트리로 돌아가기</a>
+      </div>
+
+      <div class="comment-list tree-comment-list" th:if="${viewMode == 'tree' or viewMode == 'children'}">
+        <th:block th:each="comment : ${treeComments}">
+          <th:block th:replace="~{fragments/comment :: treeNode(comment=${comment}, depth=0)}"></th:block>
+        </th:block>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(treeComments)}">
+          조회된 댓글이 없습니다.
+        </div>
+      </div>
+
+      <div class="comment-list" th:unless="${viewMode == 'tree' or viewMode == 'children'}">
+        <th:block th:each="comment : ${comments}">
+          <th:block th:replace="~{fragments/comment :: flatNode(comment=${comment})}"></th:block>
+        </th:block>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(comments)}">
+          조회된 댓글이 없습니다.
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
