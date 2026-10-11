@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 채팅</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 450px;
+            max-width: 100%;
+            height: 650px;
+            max-height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px #00000015;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: #2563eb;
+            color: white;
+        }
+
+        .chat-header h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+
+        .status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-break: break-word;
+        }
+
+        .message.mine {
+            align-self: flex-end;
+            background: #2563eb;
+            color: white;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .message .sender {
+            font-size: 11px;
+            margin-bottom: 6px;
+            opacity: 0.7;
+        }
+
+        .message .content {
+            white-space: pre-wrap;
+        }
+
+        .message .time {
+            font-size: 10px;
+            margin-top: 6px;
+            text-align: right;
+            opacity: 0.7;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: #2563eb;
+        }
+
+        .chat-input button {
+            padding: 12px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .chat-input button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body th:attr="data-room-id=${roomId},data-member-id=${memberId}">
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>실시간 채팅</h2>
+        <div class="status" id="connectionStatus">연결 중...</div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <form class="chat-input" id="chatForm">
+        <input
+                type="text"
+                id="messageInput"
+                placeholder="메시지를 입력하세요..."
+                autocomplete="off"
+                maxlength="2000"
+                disabled
+        >
+        <button type="submit" id="sendButton" disabled>전송</button>
+    </form>
+</div>
+
+<script>
+    const roomId = document.body.dataset.roomId;
+    const memberId = Number(document.body.dataset.memberId);
+
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const statusEl = document.getElementById("connectionStatus");
+    const formEl = document.getElementById("chatForm");
+
+    // 중복 메시지 방지를 위한 ID 집합
+    const displayedIds = new Set();
+
+    let historyLoaded = false;
+    let pendingMessages = [];
+
+    // 날짜 포맷
+    function formatTime(dateString) {
+        return new Date(dateString).toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    // 화면에 메시지 추가
+    function addMessage(message) {
+        console.log("수신 메시지:", message);
+        if (displayedIds.has(message.id)) {
+            return;
+        }
+
+        displayedIds.add(message.id);
+
+        const isMine = message.senderId === memberId;
+
+        const element = document.createElement("div");
+        element.className = `message ${isMine ? "mine" : "other"}`;
+
+        const sender = document.createElement("div");
+        sender.className = "sender";
+        sender.textContent = isMine
+            ? "나"
+            : `사용자 ${message.senderId}`;
+
+        const content = document.createElement("div");
+        content.className = "content";
+        content.textContent = message.content;
+
+        const time = document.createElement("div");
+        time.className = "time";
+        time.textContent = formatTime(message.createdAt);
+
+        element.append(sender, content, time);
+        messagesEl.appendChild(element);
+
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // 기존 채팅 내역 조회
+    async function loadMessages() {
+        const response = await fetch(
+            `/api/chats/rooms/${encodeURIComponent(roomId)}/messages`
+        );
+
+        if (!response.ok) {
+            throw new Error("채팅 내역 조회 실패");
+        }
+
+        const messages = await response.json();
+
+        // 실시간 메시지는 내역 조회 완료 후 반영
+        for (const message of messages) {
+            addMessage(message);
+        }
+
+        historyLoaded = true;
+
+        for (const message of pendingMessages) {
+            addMessage(message);
+        }
+
+        pendingMessages = [];
+    }
+
+    // WebSocket STOMP 클라이언트
+    const client = new StompJs.Client({
+        brokerURL: `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`,
+
+        reconnectDelay: 5000,
+
+        onConnect: async () => {
+            statusEl.textContent = "● 연결됨";
+            inputEl.disabled = false;
+            sendButton.disabled = false;
+
+            // 채팅방 구독
+            client.subscribe(`/topic/chat/${roomId}`, (frame) => {
+                const message = JSON.parse(frame.body);
+
+                if (!historyLoaded) {
+                    pendingMessages.push(message);
+                    return;
+                }
+
+                addMessage(message);
+            });
+
+            try {
+                if (!historyLoaded) {
+                    await loadMessages();
+                }
+            } catch (error) {
+                console.error(error);
+                statusEl.textContent = "채팅 내역 조회 실패";
+            }
+        },
+
+        onWebSocketClose: () => {
+            statusEl.textContent = "연결 끊김 - 재연결 중...";
+            inputEl.disabled = true;
+            sendButton.disabled = true;
+        },
+
+        onStompError: (frame) => {
+            console.error("STOMP 오류:", frame);
+            statusEl.textContent = "연결 오류";
+        }
+    });
+
+    client.activate();
+
+    // 메시지 전송
+    formEl.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const content = inputEl.value.trim();
+
+        if (!content || !client.connected) {
+            return;
+        }
+
+        client.publish({
+            destination: "/app/chat/send",
+            body: JSON.stringify({
+                roomId: roomId,
+                senderId: memberId,
+                content: content
+            })
+        });
+
+        inputEl.value = "";
+        inputEl.focus();
+    });
+</script>
+
+</body>
+</html>
